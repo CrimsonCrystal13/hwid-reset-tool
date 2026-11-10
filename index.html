@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TempSpoofer — HWID Reset Tool for Windows</title>
+<style>
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  :root {
+    --bg-deep: #070b18;
+    --bg-navy: #0c1226;
+    --bg-indigo: #141a3a;
+    --accent: #6d8bff;
+    --accent-2: #a06bff;
+    --accent-3: #35e0c8;
+    --text: #e8ecf9;
+    --muted: #9aa4c4;
+    --card: rgba(255, 255, 255, 0.04);
+    --card-border: rgba(255, 255, 255, 0.09);
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    font-family: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+    color: var(--text);
+    background:
+      radial-gradient(1200px 700px at 15% -10%, rgba(109, 139, 255, 0.22), transparent 60%),
+      radial-gradient(900px 600px at 90% 0%, rgba(160, 107, 255, 0.18), transparent 55%),
+      radial-gradient(1000px 800px at 50% 110%, rgba(53, 224, 200, 0.10), transparent 60%),
+      linear-gradient(160deg, var(--bg-deep) 0%, var(--bg-navy) 45%, var(--bg-indigo) 100%);
+    background-attachment: fixed;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  .wrap {
+    width: 100%;
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  /* ---------- NAV ---------- */
+  .nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(18px) saturate(160%);
+    -webkit-backdrop-filter: blur(18px) saturate(160%);
+    background: rgba(10, 15, 32, 0.55);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .nav-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 68px;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+    font-size: 1.05rem;
+    letter-spacing: 0.2px;
+    text-decoration: none;
+    color: var(--text);
+  }
+
+  .brand-mark {
+    width: 30px;
+    height: 30px;
+    border-radius: 9px;
+    display: grid;
+    place-items: center;
+    font-size: 0.95rem;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    box-shadow: 0 0 18px rgba(109, 139, 255, 0.55);
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 30px;
+    list-style: none;
+  }
+
+  .nav-links a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 0.92rem;
+    font-weight: 500;
+    transition: color 0.2s ease;
+  }
+
+  .nav-links a:hover {
+    color: var(--text);
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    border-radius: 11px;
+    font-weight: 600;
+    font-size: 0.94rem;
+    text-decoration: none;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: transform 0.2s ease, box-shadow 0.25s ease, background 0.25s ease, border-color 0.25s ease;
+    white-space: nowrap;
+  }
+
+  .btn-primary {
+    padding: 12px 26px;
+    color: #060a16;
+    background: linear-gradient(120deg, var(--accent-3), var(--accent) 55%, var(--accent-2));
+    box-shadow: 0 8px 26px rgba(109, 139, 255, 0.35);
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 34px rgba(109, 139, 255, 0.5);
+  }
+
+  .btn-nav {
+    padding: 9px 20px;
+    font-size: 0.87rem;
+  }
+
+  .btn-ghost {
+    padding: 12px 26px;
+    color: var(--text);
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.16);
+  }
+
+  .btn-ghost:hover {
+    transform: translateY(-2px);
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+
+  /* ---------- HERO ---------- */
+  .hero {
+    padding: 96px 0 84px;
+    text-align: center;
+  }
+
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 16px;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    color: #b9c6ff;
+    background: rgba(109, 139, 255, 0.10);
+    border: 1px solid rgba(109, 139, 255, 0.35);
+    box-shadow: inset 0 0 20px rgba(109, 139, 255, 0.12);
+  }
+
+  .pill .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--accent-3);
+    box-shadow: 0 0 10px var(--accent-3);
+  }
+
+  .hero h1 {
+    margin: 26px auto 0;
+    max-width: 860px;
+    font-size: clamp(2.1rem, 5.4vw, 3.85rem);
+    line-height: 1.1;
+    letter-spacing: -1.2px;
+    font-weight: 800;
+    background: linear-gradient(100deg, #ffffff 10%, var(--accent) 45%, var(--accent-2) 75%, var(--accent-3) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .hero p.lead {
+    margin: 22px auto 0;
+    max-width: 640px;
+    font-size: 1.06rem;
+    color: var(--muted);
+  }
+
+  .hero-actions {
+    margin-top: 38px;
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .stats {
+    margin-top: 58px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+  }
+
+  .stat {
+    padding: 18px 14px;
+    border-radius: 14px;
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    backdrop-filter: blur(8px);
+  }
+
+  .stat .value {
+    font-size: 1.18rem;
+    font-weight: 700;
+    background: linear-gradient(100deg, var(--accent), var(--accent-3));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .stat .label {
+    display: block;
+    margin-top: 3px;
+    font-size: 0.78rem;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  /* ---------- SECTION HEADS ---------- */
+  section {
+    padding: 84px 0;
+  }
+
+  .section-head {
+    text-align: center;
+    margin-bottom: 52px;
+  }
+
+  .section-head .kicker {
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent-3);
+  }
+
+  .section-head h2 {
+    margin-top: 12px;
+    font-size: clamp(1.6rem, 3.6vw, 2.4rem);
+    letter-spacing: -0.7px;
+    font-weight: 800;
+  }
+
+  .section-head p {
+    margin: 12px auto 0;
+    max-width: 560px;
+    color: var(--muted);
+    font-size: 0.98rem;
+  }
+
+  /* ---------- FEATURES ---------- */
+  .features {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 22px;
+  }
+
+  .card {
+    position: relative;
+    padding: 30px 26px 28px;
+    border-radius: 16px;
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    backdrop-filter: blur(10px);
+    overflow: hidden;
+    transition: transform 0.28s ease, box-shadow 0.28s ease, border-color 0.28s ease;
+  }
+
+  .card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2), var(--accent-3));
+    opacity: 0.9;
+  }
+
+  .card:hover {
+    transform: translateY(-7px);
+    border-color: rgba(109, 139, 255, 0.4);
+    box-shadow: 0 22px 46px rgba(5, 9, 22, 0.65), 0 0 0 1px rgba(109, 139, 255, 0.15);
+  }
+
+  .card .icon {
+    width: 48px;
+    height: 48px;
+    display: grid;
+    place-items: center;
+    font-size: 1.4rem;
+    border-radius: 13px;
+    background: linear-gradient(140deg, rgba(109, 139, 255, 0.18), rgba(160, 107, 255, 0.14));
+    border: 1px solid rgba(109, 139, 255, 0.28);
+    margin-bottom: 18px;
+  }
+
+  .card h3 {
+    font-size: 1.04rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+    letter-spacing: -0.2px;
+  }
+
+  .card p {
+    font-size: 0.9rem;
+    color: var(--muted);
+  }
+
+  /* ---------- HOW IT WORKS ---------- */
+  .steps {
+    position: relative;
+    max-width: 720px;
+    margin: 0 auto;
+    padding-left: 66px;
+  }
+
+  .steps::before {
+    content: "";
+    position: absolute;
+    left: 23px;
+    top: 14px;
+    bottom: 14px;
+    width: 3px;
+    border-radius: 3px;
+    background: linear-gradient(180deg, var(--accent), var(--accent-2), var(--accent-3));
+    box-shadow: 0 0 18px rgba(109, 139, 255, 0.5);
+  }
+
+  .step {
+    position: relative;
+    padding: 4px 0 40px;
+  }
+
+  .step:last-child {
+    padding-bottom: 0;
+  }
+
+  .step .num {
+    position: absolute;
+    left: -66px;
+    top: 0;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-weight: 800;
+    font-size: 1.05rem;
+    color: #060a16;
+    background: linear-gradient(135deg, var(--accent-3), var(--accent));
+    box-shadow: 0 0 0 6px rgba(7, 11, 24, 0.9), 0 0 26px rgba(109, 139, 255, 0.45);
+  }
+
+  .step h3 {
+    font-size: 1.08rem;
+    margin-bottom: 6px;
+    letter-spacing: -0.2px;
+  }
+
+  .step p {
+    font-size: 0.93rem;
+    color: var(--muted);
+    max-width: 540px;
+  }
+
+  /* ---------- FAQ ---------- */
+  .faq {
+    max-width: 780px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  details {
+    border-radius: 14px;
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    backdrop-filter: blur(8px);
+    overflow: hidden;
+    transition: border-color 0.25s ease, background 0.25s ease;
+  }
+
+  details[open] {
+    border-color: rgba(109, 139, 255, 0.42);
+    background: rgba(109, 139, 255, 0.06);
+  }
+
+  summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 20px 24px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.98rem;
+    list-style: none;
+    user-select: none;
+  }
+
+  summary::-webkit-details-marker {
+    display: none;
+  }
+
+  summary .plus {
+    flex-shrink: 0;
+    width: 26px;
+    height: 26px;
+    display: grid;
+    place-items: center;
+    border-radius: 8px;
+    font-size: 1.15rem;
+    line-height: 1;
+    color: var(--accent);
+    background: rgba(109, 139, 255, 0.12);
+    border: 1px solid rgba(109, 139, 255, 0.3);
+    transition: transform 0.3s ease, color 0.3s ease, background 0.3s ease;
+  }
+
+  details[open] summary .plus {
+    transform: rotate(45deg);
+    color: var(--accent-3);
+    background: rgba(53, 224, 200, 0.12);
+    border-color: rgba(53, 224, 200, 0.35);
+  }
+
+  details .answer {
+    padding: 0 24px 22px;
+    font-size: 0.92rem;
+    color: var(--muted);
+    max-width: 660px;
+  }
+
+  /* ---------- CTA BANNER ---------- */
+  .cta-banner {
+    position: relative;
+    text-align: center;
+    padding: 70px 32px;
+    border-radius: 22px;
+    overflow: hidden;
+    background: linear-gradient(150deg, rgba(109, 139, 255, 0.14), rgba(160, 107, 255, 0.10) 55%, rgba(53, 224, 200, 0.08));
+    border: 1px solid rgba(109, 139, 255, 0.32);
+  }
+
+  .cta-banner::before {
+    content: "";
+    position: absolute;
+    width: 640px;
+    height: 640px;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(circle, rgba(109, 139, 255, 0.35) 0%, rgba(160, 107, 255, 0.14) 40%, transparent 68%);
+    pointer-events: none;
+  }
+
+  .cta-banner > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .cta-banner h2 {
+    font-size: clamp(1.6rem, 4vw, 2.5rem);
+    letter-spacing: -0.8px;
+    font-weight: 800;
+    background: linear-gradient(100deg, #ffffff, var(--accent) 50%, var(--accent-3));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .cta-banner p {
+    margin: 14px auto 32px;
+    max-width: 520px;
+    color: var(--muted);
+    font-size: 0.98rem;
+  }
+
+  /* ---------- FOOTER ---------- */
+  footer {
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 34px 0;
+  }
+
+  .footer-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+
+  .footer-inner a {
+    color: var(--muted);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    transition: color 0.2s ease;
+  }
+
+  .footer-inner a:hover {
+    color: var(--accent);
+  }
+
+  /* ---------- RESPONSIVE ---------- */
+  @media (max-width: 900px) {
+    .features {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .stats {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 640px) {
+    .nav-links {
+      display: none;
+    }
+
+    .nav-inner {
+      height: 62px;
+    }
+
+    .hero {
+      padding: 68px 0 60px;
+    }
+
+    .features {
+      grid-template-columns: 1fr;
+    }
+
+    .stats {
+      grid-template-columns: 1fr;
+    }
+
+    .hero-actions .btn {
+      width: 100%;
+    }
+
+    section {
+      padding: 62px 0;
+    }
+
+    .steps {
+      padding-left: 58px;
+    }
+
+    .step .num {
+      left: -58px;
+      width: 42px;
+      height: 42px;
+      font-size: 0.95rem;
+    }
+
+    .steps::before {
+      left: 20px;
+    }
+
+    .cta-banner {
+      padding: 52px 22px;
+    }
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="wrap nav-inner">
+    <a class="brand" href="#top">
+      <span class="brand-mark">🛡</span>
+      TempSpoofer
+    </a>
+    <ul class="nav-links">
+      <li><a href="#features">Features</a></li>
+      <li><a href="#how">How it works</a></li>
+      <li><a href="#faq">FAQ</a></li>
+    </ul>
+    <a class="btn btn-primary btn-nav" href="https://gitscore.cc" target="_blank" rel="noopener">Download</a>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="wrap">
+    <span class="pill"><span class="dot"></span>hwid-reset-tool · TempSpoofer Loader</span>
+    <h1>Reset Your HWID. Clear the Trace. Play Again.</h1>
+    <p class="lead">
+      TempSpoofer is a Windows HWID spoofer and loader for the hwid-reset-tool project.
+      It rewrites hardware identifiers, wipes trace logs and helps you get past HWID bans
+      enforced by game anti-cheat systems.
+    </p>
+    <div class="hero-actions">
+      <a class="btn btn-primary" href="https://gitscore.cc" target="_blank" rel="noopener">⬇ Download TempSpoofer</a>
+      <a class="btn btn-ghost" href="https://gitscore.cc" target="_blank" rel="noopener">★ View on GitHub</a>
+    </div>
+    <div class="stats">
+      <div class="stat">
+        <span class="value">1.2M+</span>
+        <span class="label">Downloads</span>
+      </div>
+      <div class="stat">
+        <span class="value">v3.4.1</span>
+        <span class="label">Latest Version</span>
+      </div>
+      <div class="stat">
+        <span class="value">Windows 10 / 11</span>
+        <span class="label">Supported OS</span>
+      </div>
+      <div class="stat">
+        <span class="value">Free &amp; open source</span>
+        <span class="label">License</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<section id="features">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="kicker">Features</span>
+      <h2>Everything the hwid-reset-tool does for you</h2>
+      <p>A complete hardware identity reset pipeline built into a single lightweight Windows loader.</p>
+    </div>
+    <div class="features">
+      <article class="card">
+        <div class="icon">🔁</div>
+        <h3>Full HWID Reset</h3>
+        <p>Regenerates disk serials, SMBIOS values, MAC addresses and volume IDs so your machine looks brand new to anti-cheat scans.</p>
+      </article>
+      <article class="card">
+        <div class="icon">🧹</div>
+        <h3>Trace Log Cleaner</h3>
+        <p>Clears registry artifacts, recent-file traces, event logs and leftover ban fingerprints left behind by previous sessions.</p>
+      </article>
+      <article class="card">
+        <div class="icon">🛡</div>
+        <h3>Anti-Cheat Bypass</h3>
+        <p>Targeted spoofing profiles for popular HWID bans, keeping identifiers consistent across reboots and game restarts.</p>
+      </article>
+      <article class="card">
+        <div class="icon">⚡</div>
+        <h3>One-Click Loader</h3>
+        <p>The TempSpoofer loader applies the full reset sequence in seconds — no manual driver edits or command-line work required.</p>
+      </article>
+      <article class="card">
+        <div class="icon">💾</div>
+        <h3>Backup &amp; Restore</h3>
+        <p>Saves your original hardware profile before spoofing, so you can roll everything back to stock values at any time.</p>
+      </article>
+      <article class="card">
+        <div class="icon">🪶</div>
+        <h3>Lightweight &amp; Portable</h3>
+        <p>A single executable with no background services and no installer bloat — run it, spoof, and close it when you're done.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section id="how">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="kicker">How it works</span>
+      <h2>Three steps from banned to clean</h2>
+      <p>No technical knowledge needed. The loader handles every hardware-level change for you.</p>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <span class="num">1</span>
+        <h3>Download &amp; launch the loader</h3>
+        <p>Grab TempSpoofer from the download page, extract the archive and run the loader as administrator on your Windows 10 or 11 machine.</p>
+      </div>
+      <div class="step">
+        <span class="num">2</span>
+        <h3>Apply the HWID reset</h3>
+        <p>Pick a spoofing profile and hit reset. The tool backs up your original IDs, then rewrites hardware identifiers and clears trace logs.</p>
+      </div>
+      <div class="step">
+        <span class="num">3</span>
+        <h3>Reboot and play</h3>
+        <p>Restart Windows so the new hardware profile takes effect, then launch your game — the HWID ban no longer matches your machine.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="faq">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="kicker">FAQ</span>
+      <h2>Questions about TempSpoofer</h2>
+      <p>Short answers to what people ask most about the hwid-reset-tool loader.</p>
+    </div>
+    <div class="faq">
+      <details>
+        <summary>Does TempSpoofer work on Windows 10 and Windows 11? <span class="plus">+</span></summary>
+        <div class="answer">Yes. The loader is built for both Windows 10 and Windows 11, including the latest feature updates. Run it with administrator rights so it can modify hardware identifiers and clear system trace logs.</div>
+      </details>
+      <details>
+        <summary>What exactly does the HWID reset change? <
